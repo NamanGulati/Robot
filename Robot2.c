@@ -38,7 +38,8 @@ void runADC(void);
 void sharpTurnRight(void);
 void flashRSL(int);
 void readSensors(void);
-
+int scanBarCode(void);
+void sharpTurnLeft(void);
 // MAIN PROGRAM //
 
 void main(void)
@@ -57,7 +58,7 @@ void main(void)
 		{	
 			RB7 = 1;
 			RC0 = 1;
-			counter++;
+			
 			
 				while ((leftSensor >= LEFT_THRESHOLD) && (rightSensor >= RIGHT_THRESHOLD))
 				{
@@ -70,9 +71,41 @@ void main(void)
 				RB7 = 0;
 				RC0 = 0;
 				
-				sharpTurnRight();
-				
+			int code;
 			
+			if(counter==2){
+				_delay(300000);
+			}
+			
+			else if(counter==3){
+				sharpTurnRight();
+				code=scanBarCode();
+				/*if(code==1){
+					backward();
+					_delay(1000000);
+					sharpTurnLeft();
+				}*/
+				flashRSL(code);
+				forward();
+			}
+			
+			/*else if(counter==4){
+					sharpTurnLeft();
+				while ((leftSensor >= LEFT_THRESHOLD) && (rightSensor >= RIGHT_THRESHOLD))
+				{
+					forward();
+					readSensors();
+				}
+				
+				stop();
+				
+				if(code==1){
+					sharpTurnLeft();
+				}			
+
+			}*/
+			
+			counter++;
 		}
 		else if ((leftSensor >= LEFT_THRESHOLD) && (rightSensor < RIGHT_THRESHOLD)) // touching line on left
 		{
@@ -91,7 +124,8 @@ void main(void)
 			RB7 = 0;
 			RC0 = 0;
 		}
-		
+	
+	
 	} // end of infinite loop
 } // end of main method
 		
@@ -254,4 +288,49 @@ void flashRSL(int count)
 	ADCON0bits.CHS = 0b1011;
 	runADC();
 	rightSensor = ADRESH;
+}
+
+int scanBarCode(void){
+	forward();
+	int count=0;
+	for(int i=0;i<1800000;i++){
+	
+		readSensors();
+			if((leftSensor >= LEFT_THRESHOLD) && (rightSensor >= RIGHT_THRESHOLD)){
+
+				count++;
+	
+			}
+	
+	}
+		stop();
+		return count;
+
+}
+
+/*
+@author: Naman Gulati
+@param: none
+@return void
+
+details: does a sharp turn to the left
+
+*/
+void sharpTurnLeft(void)
+{
+	forward();
+	_delay(500000);
+	stop();
+	
+	spinLeft();
+
+	do
+	{
+		readSensors();
+	
+	} while(rightSensor <=RIGHT_THRESHOLD);
+	spinLeft();
+	_delay(100000);
+	
+	stop();
 }
